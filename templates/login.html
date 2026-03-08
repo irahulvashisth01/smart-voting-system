@@ -166,12 +166,13 @@ function capture(){
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
+canvas.width = 320;
+canvas.height = 240;
 
-context.drawImage(video,0,0);
+context.drawImage(video,0,0,320,240);
 
-const image = canvas.toDataURL("image/png");
+// compress image
+const image = canvas.toDataURL("image/jpeg",0.5);
 
 document.getElementById("image_data").value = image;
 

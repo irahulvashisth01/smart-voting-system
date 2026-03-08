@@ -6,6 +6,9 @@ import csv
 
 app = Flask(__name__)
 
+# Increase upload size to 16MB
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
