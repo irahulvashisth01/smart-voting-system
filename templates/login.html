@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Voter Login</title>
 
 <style>
@@ -71,6 +71,45 @@ color:white;
 
 button:hover{
 opacity:0.9;
+}
+
+/* MOBILE RESPONSIVE */
+
+@media (max-width:768px){
+
+.container{
+flex-direction:column;
+width:95%;
+}
+
+.cards{
+flex-direction:column;
+}
+
+.sidebar{
+width:100%;
+height:auto;
+position:relative;
+}
+
+.content{
+margin-left:0;
+padding:15px;
+}
+
+table{
+display:block;
+overflow-x:auto;
+}
+
+button{
+width:100%;
+}
+
+input{
+width:100%;
+}
+
 }
 
 </style>
