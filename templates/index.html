@@ -193,6 +193,10 @@ width:90%;
 <button class="login">Login & Vote</button>
 </a>
 
+<button id="installBtn" style="display:none;background:#ff9800;color:white;">
+📲 Install App
+</button>
+
 </div>
 
 <footer>
@@ -224,6 +228,38 @@ navigator.serviceWorker.register('/static/service-worker.js')
 console.log("Service Worker Registered");
 });
 }
+
+</script>
+
+<script>
+
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+
+e.preventDefault();
+
+deferredPrompt = e;
+
+document.getElementById("installBtn").style.display = "block";
+
+});
+
+document.getElementById("installBtn").addEventListener("click", async () => {
+
+if (deferredPrompt) {
+
+deferredPrompt.prompt();
+
+const { outcome } = await deferredPrompt.userChoice;
+
+console.log(`User response: ${outcome}`);
+
+deferredPrompt = null;
+
+}
+
+});
 
 </script>
 
