@@ -158,6 +158,14 @@ canvas.height = 240;
 
 context.drawImage(video,0,0,320,240);
 
+const image = canvas.toDataURL("image/jpeg",0.4);
+
+document.getElementById("image_data").value = image;
+
+alert("Face Captured Successfully");
+
+}
+
 /* compress image */
 const image = canvas.toDataURL("image/jpeg",0.4);
 
