@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#2c3e50">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Voting Page</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4ca1af">
+<link rel="manifest" href="/static/manifest.json">
 
 <style>
 
@@ -15,25 +18,32 @@ background:linear-gradient(to right,#2c3e50,#4ca1af);
 color:white;
 }
 
+/* HEADER */
+
 header{
 text-align:center;
 padding:20px;
-font-size:30px;
+font-size:28px;
 font-weight:bold;
 }
+
+/* MAIN CONTAINER */
 
 .container{
 display:flex;
 padding:30px;
 gap:30px;
+flex-wrap:wrap;
 }
 
+/* USER PROFILE */
+
 .user-card{
-width:300px;
+width:280px;
 background:white;
 color:black;
 padding:20px;
-border-radius:8px;
+border-radius:10px;
 text-align:center;
 box-shadow:0 5px 15px rgba(0,0,0,0.3);
 }
@@ -43,20 +53,25 @@ width:120px;
 height:120px;
 border-radius:50%;
 object-fit:cover;
+margin-bottom:10px;
 }
+
+/* CANDIDATE GRID */
 
 .candidate-section{
 flex:1;
 display:grid;
-grid-template-columns:repeat(3,1fr);
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 gap:20px;
 }
+
+/* CANDIDATE CARD */
 
 .candidate-card{
 background:white;
 color:black;
 padding:20px;
-border-radius:8px;
+border-radius:10px;
 text-align:center;
 box-shadow:0 5px 15px rgba(0,0,0,0.3);
 }
@@ -68,60 +83,55 @@ border-radius:50%;
 object-fit:cover;
 }
 
+/* PARTY SYMBOL */
+
 .symbol{
 width:40px;
 margin-top:10px;
 }
 
+/* BUTTON */
+
 button{
 margin-top:15px;
 padding:10px 20px;
 border:none;
-border-radius:5px;
+border-radius:6px;
 cursor:pointer;
 background:#27ae60;
 color:white;
 font-size:16px;
+transition:0.2s;
+}
+
+button:hover{
+transform:scale(1.05);
 }
 
 button:disabled{
 background:gray;
 cursor:not-allowed;
 }
-/* MOBILE RESPONSIVE */
+
+/* MOBILE */
 
 @media (max-width:768px){
 
 .container{
 flex-direction:column;
-width:95%;
-}
-
-.cards{
-flex-direction:column;
-}
-
-.sidebar{
-width:100%;
-height:auto;
-position:relative;
-}
-
-.content{
-margin-left:0;
+align-items:center;
 padding:15px;
 }
 
-table{
-display:block;
-overflow-x:auto;
+.user-card{
+width:90%;
+}
+
+.candidate-section{
+grid-template-columns:1fr;
 }
 
 button{
-width:100%;
-}
-
-input{
 width:100%;
 }
 
@@ -155,7 +165,6 @@ width:100%;
 
 </div>
 
-
 <!-- CANDIDATES -->
 
 <div class="candidate-section">
@@ -178,13 +187,9 @@ width:100%;
 <input type="hidden" name="user_id" value="{{user['id']}}">
 
 {% if user['has_voted']==1 %}
-
 <button disabled>Already Voted</button>
-
 {% else %}
-
 <button>Vote</button>
-
 {% endif %}
 
 </form>
@@ -196,6 +201,17 @@ width:100%;
 </div>
 
 </div>
+
+<script>
+
+/* PWA SERVICE WORKER */
+
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('/static/service-worker.js')
+.then(()=>console.log("Service Worker Registered"));
+}
+
+</script>
 
 </body>
 </html>
