@@ -1,116 +1,108 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#2c3e50">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Voter Registration</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#243b55">
+<link rel="manifest" href="/static/manifest.json">
 
 <style>
 
 body{
-    margin:0;
-    font-family:Arial, Helvetica, sans-serif;
-    background:linear-gradient(to right,#141e30,#243b55);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    color:white;
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(to right,#141e30,#243b55);
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+color:white;
 }
+
+/* CONTAINER */
 
 .container{
-    background:white;
-    color:black;
-    width:420px;
-    padding:30px;
-    border-radius:10px;
-    box-shadow:0 8px 20px rgba(0,0,0,0.4);
-    text-align:center;
+background:white;
+color:black;
+width:420px;
+max-width:95%;
+padding:30px;
+border-radius:10px;
+box-shadow:0 8px 20px rgba(0,0,0,0.4);
+text-align:center;
 }
+
+/* TITLE */
 
 h2{
-    margin-bottom:20px;
+margin-bottom:20px;
 }
+
+/* INPUT */
 
 input{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-    margin-bottom:15px;
-    border-radius:5px;
-    border:1px solid #ccc;
+width:100%;
+padding:10px;
+margin-top:10px;
+margin-bottom:15px;
+border-radius:5px;
+border:1px solid #ccc;
 }
+
+/* VIDEO */
 
 video{
-    border-radius:6px;
-    border:2px solid #444;
+width:100%;
+max-width:320px;
+border-radius:6px;
+border:2px solid #444;
 }
 
+/* BUTTONS */
+
 button{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:6px;
-    font-size:16px;
-    cursor:pointer;
-    margin-top:10px;
+width:100%;
+padding:12px;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+margin-top:10px;
+transition:0.2s;
 }
 
 .capture{
-    background:#3498db;
-    color:white;
+background:#3498db;
+color:white;
 }
 
 .register{
-    background:#2ecc71;
-    color:white;
+background:#2ecc71;
+color:white;
 }
 
 .back{
-    background:#555;
-    color:white;
+background:#555;
+color:white;
 }
 
 button:hover{
-    opacity:0.9;
+opacity:0.9;
 }
 
-/* MOBILE RESPONSIVE */
+/* MOBILE */
 
 @media (max-width:768px){
 
 .container{
-flex-direction:column;
-width:95%;
+padding:20px;
 }
 
-.cards{
-flex-direction:column;
-}
-
-.sidebar{
-width:100%;
-height:auto;
-position:relative;
-}
-
-.content{
-margin-left:0;
-padding:15px;
-}
-
-table{
-display:block;
-overflow-x:auto;
-}
-
-button{
-width:100%;
-}
-
-input{
-width:100%;
+h2{
+font-size:22px;
 }
 
 }
@@ -133,13 +125,13 @@ width:100%;
 
 <h3>Face Verification</h3>
 
-<video id="video" width="320" height="240" autoplay></video>
+<video id="video" autoplay></video>
 
 <br>
 
 <button type="button" class="capture" onclick="capture()">Capture Face</button>
 
-<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+<canvas id="canvas" style="display:none;"></canvas>
 
 <input type="hidden" name="image" id="image_data">
 
@@ -155,39 +147,50 @@ width:100%;
 
 </div>
 
-
 <script>
+
+/* CAMERA */
 
 const video = document.getElementById("video");
 
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(stream => {
-    video.srcObject = stream;
+navigator.mediaDevices.getUserMedia({ video:true })
+.then(stream=>{
+video.srcObject = stream;
 })
-.catch(err => {
-    alert("Camera access denied!");
+.catch(()=>{
+alert("Camera access denied!");
 });
+
+/* CAPTURE IMAGE */
 
 function capture(){
 
-    const canvas = document.getElementById("canvas");
-    const context = canvas.getContext("2d");
+const canvas = document.getElementById("canvas");
+const context = canvas.getContext("2d");
 
-    context.drawImage(video,0,0,320,240);
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
 
-    const image = canvas.toDataURL("image/png");
+context.drawImage(video,0,0);
 
-    document.getElementById("image_data").value = image;
+const image = canvas.toDataURL("image/png");
 
-    alert("Face Captured Successfully");
+document.getElementById("image_data").value = image;
+
+alert("Face Captured Successfully");
 
 }
 
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-navigator.serviceWorker.register("/static/service-worker.js");
+/* PWA SERVICE WORKER */
+
+if ('serviceWorker' in navigator){
+navigator.serviceWorker.register('/static/service-worker.js')
+.then(()=>{
+console.log("Service Worker Registered");
+});
 }
+
 </script>
+
 </body>
 </html>
