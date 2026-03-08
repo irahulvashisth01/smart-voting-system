@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html>
+
 <head>
-    <link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#2c3e50">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Voter Login</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#3a6073">
+<link rel="manifest" href="/static/manifest.json">
 
 <style>
 
@@ -15,23 +18,30 @@ background:linear-gradient(to right,#16222a,#3a6073);
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
+min-height:100vh;
 color:white;
 }
+
+/* LOGIN CONTAINER */
 
 .container{
 background:white;
 color:black;
 width:420px;
+max-width:95%;
 padding:30px;
 border-radius:10px;
 box-shadow:0 8px 20px rgba(0,0,0,0.4);
 text-align:center;
 }
 
+/* TITLE */
+
 h2{
 margin-bottom:20px;
 }
+
+/* INPUT */
 
 input{
 width:100%;
@@ -41,10 +51,16 @@ border-radius:5px;
 border:1px solid #ccc;
 }
 
+/* VIDEO */
+
 video{
+width:100%;
+max-width:320px;
 border-radius:6px;
 border:2px solid #444;
 }
+
+/* BUTTONS */
 
 button{
 width:100%;
@@ -54,6 +70,7 @@ border-radius:6px;
 font-size:16px;
 cursor:pointer;
 margin-top:10px;
+transition:0.2s;
 }
 
 .capture{
@@ -80,36 +97,11 @@ opacity:0.9;
 @media (max-width:768px){
 
 .container{
-flex-direction:column;
-width:95%;
+padding:20px;
 }
 
-.cards{
-flex-direction:column;
-}
-
-.sidebar{
-width:100%;
-height:auto;
-position:relative;
-}
-
-.content{
-margin-left:0;
-padding:15px;
-}
-
-table{
-display:block;
-overflow-x:auto;
-}
-
-button{
-width:100%;
-}
-
-input{
-width:100%;
+h2{
+font-size:22px;
 }
 
 }
@@ -130,7 +122,7 @@ width:100%;
 
 <h3>Face Verification</h3>
 
-<video id="video" width="320" height="240" autoplay></video>
+<video id="video" autoplay></video>
 
 <br>
 
@@ -152,7 +144,10 @@ width:100%;
 
 </div>
 
+
 <script>
+
+/* CAMERA ACCESS */
 
 const video = document.getElementById("video");
 
@@ -164,12 +159,17 @@ video.srcObject = stream;
 alert("Camera access denied!");
 });
 
+/* CAPTURE IMAGE */
+
 function capture(){
 
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 
-context.drawImage(video,0,0,320,240);
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+
+context.drawImage(video,0,0);
 
 const image = canvas.toDataURL("image/png");
 
@@ -179,7 +179,17 @@ alert("Face Captured Successfully");
 
 }
 
+/* SERVICE WORKER (PWA) */
+
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('/static/service-worker.js')
+.then(function(){
+console.log("Service Worker Registered");
+});
+}
+
 </script>
 
 </body>
+
 </html>
