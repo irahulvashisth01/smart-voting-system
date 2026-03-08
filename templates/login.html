@@ -161,15 +161,28 @@ alert("Camera access denied!");
 
 /* CAPTURE IMAGE */
 
+<script>
 function capture(){
 
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 
+// reduce resolution
 canvas.width = 320;
 canvas.height = 240;
 
+// draw smaller frame
 context.drawImage(video,0,0,320,240);
+
+// compress image to JPEG (much smaller than PNG)
+const image = canvas.toDataURL("image/jpeg",0.4);
+
+document.getElementById("image_data").value = image;
+
+alert("Face Captured Successfully");
+
+}
+</script>
 
 // compress image
 const image = canvas.toDataURL("image/jpeg",0.5);
