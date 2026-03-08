@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -22,8 +22,6 @@ min-height:100vh;
 color:white;
 }
 
-/* LOGIN CONTAINER */
-
 .container{
 background:white;
 color:black;
@@ -35,13 +33,9 @@ box-shadow:0 8px 20px rgba(0,0,0,0.4);
 text-align:center;
 }
 
-/* TITLE */
-
 h2{
 margin-bottom:20px;
 }
-
-/* INPUT */
 
 input{
 width:100%;
@@ -51,16 +45,12 @@ border-radius:5px;
 border:1px solid #ccc;
 }
 
-/* VIDEO */
-
 video{
 width:100%;
 max-width:320px;
 border-radius:6px;
 border:2px solid #444;
 }
-
-/* BUTTONS */
 
 button{
 width:100%;
@@ -91,8 +81,6 @@ color:white;
 button:hover{
 opacity:0.9;
 }
-
-/* MOBILE RESPONSIVE */
 
 @media (max-width:768px){
 
@@ -128,7 +116,7 @@ font-size:22px;
 
 <button type="button" class="capture" onclick="capture()">Capture Face</button>
 
-<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+<canvas id="canvas" style="display:none;"></canvas>
 
 <input type="hidden" name="image" id="image_data">
 
@@ -144,37 +132,33 @@ font-size:22px;
 
 </div>
 
-
 <script>
 
 /* CAMERA ACCESS */
 
 const video = document.getElementById("video");
 
-navigator.mediaDevices.getUserMedia({ video: true })
-.then(stream => {
+navigator.mediaDevices.getUserMedia({ video:true })
+.then(stream=>{
 video.srcObject = stream;
 })
-.catch(err => {
+.catch(()=>{
 alert("Camera access denied!");
 });
 
-/* CAPTURE IMAGE */
+/* CAPTURE FACE */
 
-<script>
 function capture(){
 
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 
-// reduce resolution
 canvas.width = 320;
 canvas.height = 240;
 
-// draw smaller frame
 context.drawImage(video,0,0,320,240);
 
-// compress image to JPEG (much smaller than PNG)
+/* compress image */
 const image = canvas.toDataURL("image/jpeg",0.4);
 
 document.getElementById("image_data").value = image;
@@ -182,28 +166,15 @@ document.getElementById("image_data").value = image;
 alert("Face Captured Successfully");
 
 }
-</script>
 
-// compress image
-const image = canvas.toDataURL("image/jpeg",0.5);
-
-document.getElementById("image_data").value = image;
-
-alert("Face Captured Successfully");
-
-}
-
-/* SERVICE WORKER (PWA) */
+/* SERVICE WORKER */
 
 if ('serviceWorker' in navigator) {
 navigator.serviceWorker.register('/static/service-worker.js')
-.then(function(){
-console.log("Service Worker Registered");
-});
+.then(()=>console.log("Service Worker Registered"));
 }
 
 </script>
 
 </body>
-
 </html>
