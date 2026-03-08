@@ -1,126 +1,154 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="manifest" href="/static/manifest.json">
-<meta name="theme-color" content="#2c3e50">
+
 <title>Smart Voting System</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2c5364">
+<link rel="manifest" href="/static/manifest.json">
 
 <style>
 
 body{
-    margin:0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: linear-gradient(to right,#0f2027,#203a43,#2c5364);
-    color:white;
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:linear-gradient(to right,#0f2027,#203a43,#2c5364);
+color:white;
 }
 
+/* HEADER */
+
 header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:20px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:20px 40px;
+flex-wrap:wrap;
 }
 
 .title{
-    font-size:38px;
-    font-weight:bold;
+font-size:34px;
+font-weight:bold;
+}
+
+/* MOBILE MENU BUTTON */
+
+.menu-btn{
+display:none;
+background:none;
+border:none;
+font-size:26px;
+color:white;
+cursor:pointer;
+}
+
+/* TOP BUTTONS */
+
+.top-buttons{
+display:flex;
 }
 
 .top-buttons a{
-    text-decoration:none;
+text-decoration:none;
 }
 
 .top-buttons button{
-    padding:10px 18px;
-    margin-left:10px;
-    border:none;
-    border-radius:6px;
-    font-size:15px;
-    cursor:pointer;
+padding:10px 18px;
+margin-left:10px;
+border:none;
+border-radius:6px;
+font-size:15px;
+cursor:pointer;
 }
 
 .result{
-    background:#f39c12;
-    color:white;
+background:#f39c12;
+color:white;
 }
 
 .admin{
-    background:#e74c3c;
-    color:white;
+background:#e74c3c;
+color:white;
 }
 
+/* CENTER BOX */
+
 .center-box{
-    height:80vh;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
+height:75vh;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
 }
 
 .center-box button{
-    width:240px;
-    padding:15px;
-    margin:12px;
-    font-size:18px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
+width:260px;
+padding:16px;
+margin:12px;
+font-size:18px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+transition:0.2s;
 }
 
 .register{
-    background:#2ecc71;
+background:#2ecc71;
+color:white;
 }
 
 .login{
-    background:#3498db;
+background:#3498db;
+color:white;
 }
 
 button:hover{
-    transform:scale(1.05);
+transform:scale(1.05);
 }
 
+/* FOOTER */
+
 footer{
-    text-align:center;
-    padding:10px;
-    font-size:14px;
+text-align:center;
+padding:10px;
+font-size:14px;
 }
 
 /* MOBILE RESPONSIVE */
 
 @media (max-width:768px){
 
-.container{
+header{
 flex-direction:column;
-width:95%;
-}
-
-.cards{
-flex-direction:column;
-}
-
-.sidebar{
-width:100%;
-height:auto;
-position:relative;
-}
-
-.content{
-margin-left:0;
+align-items:flex-start;
 padding:15px;
 }
 
-table{
+.title{
+font-size:26px;
+margin-bottom:10px;
+}
+
+.menu-btn{
 display:block;
-overflow-x:auto;
+margin-bottom:10px;
 }
 
-button{
+.top-buttons{
+display:none;
+flex-direction:column;
 width:100%;
 }
 
-input{
+.top-buttons button{
 width:100%;
+margin:5px 0;
+}
+
+.center-box button{
+width:90%;
 }
 
 }
@@ -128,6 +156,7 @@ width:100%;
 </style>
 
 </head>
+
 
 <body>
 
@@ -137,7 +166,9 @@ width:100%;
 🗳 Smart Voting System
 </div>
 
-<div class="top-buttons">
+<button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+<div class="top-buttons" id="menu">
 
 <a href="/result">
 <button class="result">Results</button>
@@ -168,5 +199,34 @@ width:100%;
 Secure Online Election Platform
 </footer>
 
+
+<script>
+
+/* MOBILE MENU */
+
+function toggleMenu(){
+
+var menu = document.getElementById("menu");
+
+if(menu.style.display === "flex"){
+menu.style.display = "none";
+}else{
+menu.style.display = "flex";
+}
+
+}
+
+/* SERVICE WORKER FOR PWA */
+
+if ('serviceWorker' in navigator) {
+navigator.serviceWorker.register('/static/service-worker.js')
+.then(function(){
+console.log("Service Worker Registered");
+});
+}
+
+</script>
+
 </body>
+
 </html>
