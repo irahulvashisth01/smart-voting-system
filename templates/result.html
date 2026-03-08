@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Election Results</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:linear-gradient(to right,#1f4037,#99f2c8);
+    color:white;
+    text-align:center;
+}
+
+header{
+    font-size:36px;
+    padding:25px;
+    font-weight:bold;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    gap:30px;
+    margin-top:40px;
+}
+
+.card{
+    background:white;
+    color:black;
+    width:240px;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+}
+
+.votes{
+    font-size:28px;
+    margin-top:10px;
+}
+
+.winner{
+    margin-top:40px;
+    font-size:28px;
+    font-weight:bold;
+    color:yellow;
+}
+
+.buttons{
+    margin-top:40px;
+}
+
+button{
+    padding:12px 20px;
+    margin:10px;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.stop{
+    background:#e74c3c;
+    color:white;
+}
+
+.download{
+    background:#3498db;
+    color:white;
+}
+
+.home{
+    background:#555;
+    color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+📊 Election Results
+</header>
+
+<div class="container">
+
+<div class="card">
+<h3>Candidate A</h3>
+<div class="votes">{{votes_a}}</div>
+</div>
+
+<div class="card">
+<h3>Candidate B</h3>
+<div class="votes">{{votes_b}}</div>
+</div>
+
+<div class="card">
+<h3>Candidate C</h3>
+<div class="votes">{{votes_c}}</div>
+</div>
+
+</div>
+
+<div class="winner">
+🏆 Winner: {{winner}}
+</div>
+
+<div class="buttons">
+
+<a href="/stop_election">
+<button class="stop">Stop Election</button>
+</a>
+
+<a href="/download_result">
+<button class="download">Download Result</button>
+</a>
+
+<a href="/">
+<button class="home">Back to Home</button>
+</a>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<canvas id="resultChart"></canvas>
+
+<script>
+const data = {
+    labels: {{ labels|safe }},
+    datasets: [{
+        label: 'Votes',
+        data: {{ votes|safe }},
+        borderWidth: 1
+    }]
+};
+
+new Chart(document.getElementById('resultChart'), {
+    type: 'bar',
+    data: data
+});
+</script>
+
+</body>
+</html>

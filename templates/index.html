@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Smart Voting System</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: linear-gradient(to right,#0f2027,#203a43,#2c5364);
+    color:white;
+}
+
+header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 40px;
+}
+
+.title{
+    font-size:38px;
+    font-weight:bold;
+}
+
+.top-buttons a{
+    text-decoration:none;
+}
+
+.top-buttons button{
+    padding:10px 18px;
+    margin-left:10px;
+    border:none;
+    border-radius:6px;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.result{
+    background:#f39c12;
+    color:white;
+}
+
+.admin{
+    background:#e74c3c;
+    color:white;
+}
+
+.center-box{
+    height:80vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+.center-box button{
+    width:240px;
+    padding:15px;
+    margin:12px;
+    font-size:18px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.register{
+    background:#2ecc71;
+}
+
+.login{
+    background:#3498db;
+}
+
+button:hover{
+    transform:scale(1.05);
+}
+
+footer{
+    text-align:center;
+    padding:10px;
+    font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="title">
+🗳 Smart Voting System
+</div>
+
+<div class="top-buttons">
+
+<a href="/result">
+<button class="result">Results</button>
+</a>
+
+<a href="/admin">
+<button class="admin">Admin</button>
+</a>
+
+</div>
+
+</header>
+
+
+<div class="center-box">
+
+<a href="/register">
+<button class="register">Register Voter</button>
+</a>
+
+<a href="/login">
+<button class="login">Login & Vote</button>
+</a>
+
+</div>
+
+<footer>
+Secure Online Election Platform
+</footer>
+
+</body>
+</html>

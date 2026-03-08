@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Voter Registration</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:linear-gradient(to right,#141e30,#243b55);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    color:white;
+}
+
+.container{
+    background:white;
+    color:black;
+    width:420px;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    text-align:center;
+}
+
+h2{
+    margin-bottom:20px;
+}
+
+input{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    margin-bottom:15px;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
+
+video{
+    border-radius:6px;
+    border:2px solid #444;
+}
+
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:10px;
+}
+
+.capture{
+    background:#3498db;
+    color:white;
+}
+
+.register{
+    background:#2ecc71;
+    color:white;
+}
+
+.back{
+    background:#555;
+    color:white;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Voter Registration</h2>
+
+<form method="POST" action="/register">
+
+<input type="text" name="name" placeholder="Enter Full Name" required>
+
+<input type="email" name="email" placeholder="Enter Email Address" required>
+
+<h3>Face Verification</h3>
+
+<video id="video" width="320" height="240" autoplay></video>
+
+<br>
+
+<button type="button" class="capture" onclick="capture()">Capture Face</button>
+
+<canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+<input type="hidden" name="image" id="image_data">
+
+<button type="submit" class="register">Register Voter</button>
+
+</form>
+
+<br>
+
+<a href="/">
+<button class="back">Back to Home</button>
+</a>
+
+</div>
+
+
+<script>
+
+const video = document.getElementById("video");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+})
+.catch(err => {
+    alert("Camera access denied!");
+});
+
+function capture(){
+
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    context.drawImage(video,0,0,320,240);
+
+    const image = canvas.toDataURL("image/png");
+
+    document.getElementById("image_data").value = image;
+
+    alert("Face Captured Successfully");
+
+}
+
+</script>
+
+</body>
+</html>
