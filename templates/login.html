@@ -37,14 +37,6 @@ h2{
 margin-bottom:20px;
 }
 
-input{
-width:100%;
-padding:10px;
-margin-bottom:15px;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
 video{
 width:100%;
 max-width:320px;
@@ -132,17 +124,31 @@ font-size:22px;
 
 <script>
 
-/* CAMERA ACCESS */
+/* START CAMERA */
 
 const video = document.getElementById("video");
 
-navigator.mediaDevices.getUserMedia({ video:true })
-.then(stream=>{
-video.srcObject = stream;
-})
-.catch(()=>{
-alert("Camera access denied!");
+async function startCamera(){
+
+try{
+
+const stream = await navigator.mediaDevices.getUserMedia({
+video:true
 });
+
+video.srcObject = stream;
+
+}catch(error){
+
+alert("Camera access denied or not supported");
+
+console.log(error);
+
+}
+
+}
+
+startCamera();
 
 /* CAPTURE FACE */
 
@@ -156,15 +162,8 @@ canvas.height = 240;
 
 context.drawImage(video,0,0,320,240);
 
-const image = canvas.toDataURL("image/jpeg",0.4);
-
-document.getElementById("image_data").value = image;
-
-alert("Face Captured Successfully");
-
-}
-
 /* compress image */
+
 const image = canvas.toDataURL("image/jpeg",0.4);
 
 document.getElementById("image_data").value = image;
@@ -173,14 +172,17 @@ alert("Face Captured Successfully");
 
 }
 
-/* SERVICE WORKER */
+/* SERVICE WORKER (PWA) */
 
 if ('serviceWorker' in navigator) {
+
 navigator.serviceWorker.register('/static/service-worker.js')
 .then(()=>console.log("Service Worker Registered"));
+
 }
 
 </script>
 
 </body>
+
 </html>
