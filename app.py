@@ -8,12 +8,17 @@ import numpy as np
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = "super_secure_key_change_this"
+app.secret_key = "change_this_secret_key"
 
-# Upload settings
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+
+# Ensure upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Load face detector
+face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
 
 # ---------------- DATABASE ----------------
@@ -33,7 +38,7 @@ def home():
 
 # ---------------- REGISTER ----------------
 
-@app.route("/register", methods=["GET","POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
 
     if request.method == "POST":
@@ -67,7 +72,7 @@ def register():
 
         cursor.execute(
             "INSERT INTO voters (name,email,photo,has_voted) VALUES (?,?,?,0)",
-            (name,email,filepath)
+            (name, email, filepath)
         )
 
         conn.commit()
@@ -80,7 +85,7 @@ def register():
 
 # ---------------- FACE LOGIN ----------------
 
-@app.route("/login", methods=["GET","POST"])
+@app.route("/login", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
@@ -91,32 +96,27 @@ def login():
             return "Capture face first"
 
         try:
-
             image_data = image_data.split(",")[1]
             image_bytes = base64.b64decode(image_data)
 
             nparr = np.frombuffer(image_bytes, np.uint8)
             captured_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
         except:
             return "Image processing error"
 
-        # Convert to grayscale
         gray = cv2.cvtColor(captured_img, cv2.COLOR_BGR2GRAY)
 
-        # Load face detector
-        face_cascade = cv2.CascadeClassifier(
-            "haarcascade_frontalface_default.xml"
+        faces = face_cascade.detectMultiScale(
+            gray,
+            scaleFactor=1.3,
+            minNeighbors=5,
+            minSize=(50, 50)
         )
 
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-
-        # ---------------- NO FACE DETECTED ----------------
-
         if len(faces) == 0:
-            return "No face detected. Please capture again."
+            return "No face detected. Try again."
 
-        captured_img = cv2.resize(captured_img,(200,200))
+        captured_img = cv2.resize(captured_img, (200, 200))
 
         conn = get_db()
         cursor = conn.cursor()
@@ -128,30 +128,32 @@ def login():
 
         for user in voters:
 
+            if not os.path.exists(user["photo"]):
+                continue
+
             stored_img = cv2.imread(user["photo"])
 
             if stored_img is None:
                 continue
 
-            stored_img = cv2.resize(stored_img,(200,200))
+            stored_img = cv2.resize(stored_img, (200, 200))
 
-            diff = cv2.absdiff(stored_img,captured_img)
+            stored_gray = cv2.cvtColor(stored_img, cv2.COLOR_BGR2GRAY)
+            captured_gray = cv2.cvtColor(captured_img, cv2.COLOR_BGR2GRAY)
+
+            diff = cv2.absdiff(stored_gray, captured_gray)
 
             score = np.mean(diff)
 
-            if score < 50:
+            # Higher threshold for cloud environments
+            if score < 120:
                 matched_user = user
                 break
 
         conn.close()
 
-        # ---------------- FACE MATCH ----------------
-
         if matched_user:
-
             return redirect(f"/vote/{matched_user['id']}")
-
-        # ---------------- FACE NOT MATCHED ----------------
 
         return "Face not matched. Try again."
 
@@ -243,7 +245,7 @@ def result():
 
 # ---------------- ADMIN LOGIN ----------------
 
-@app.route("/admin_login", methods=["GET","POST"])
+@app.route("/admin_login", methods=["GET", "POST"])
 def admin_login():
 
     if request.method == "POST":
@@ -256,7 +258,7 @@ def admin_login():
 
         cursor.execute(
             "SELECT * FROM admin WHERE username=? AND password=?",
-            (username,password)
+            (username, password)
         )
 
         admin = cursor.fetchone()
@@ -318,7 +320,7 @@ def add_candidate():
 
     cursor.execute(
         "INSERT INTO candidates (name,party,symbol,photo,votes) VALUES (?,?,?,?,0)",
-        (name,party,symbol_path,photo_path)
+        (name, party, symbol_path, photo_path)
     )
 
     conn.commit()
@@ -361,10 +363,9 @@ def download_result():
 
     filename = "result.csv"
 
-    with open(filename,"w",newline="") as f:
-
+    with open(filename, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["Candidate","Votes"])
+        writer.writerow(["Candidate", "Votes"])
 
         for row in data:
             writer.writerow(row)
