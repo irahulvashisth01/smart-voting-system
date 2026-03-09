@@ -1,19 +1,22 @@
-from flask import Flask, render_template, request, redirect, send_file
+from flask import Flask, render_template, request, redirect, send_file, session
 import sqlite3
 import os
 import base64
 import csv
+import cv2
+import numpy as np
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = "super_secure_key_change_this"
 
-# Increase upload size to 16MB
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-
+# Upload settings
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
 
-# ---------------- DATABASE CONNECTION ----------------
+# ---------------- DATABASE ----------------
 
 def get_db():
     conn = sqlite3.connect("database.db")
@@ -21,41 +24,45 @@ def get_db():
     return conn
 
 
-# ---------------- HOME PAGE ----------------
+# ---------------- HOME ----------------
 
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# ---------------- REGISTER VOTER ----------------
+# ---------------- REGISTER ----------------
 
 @app.route("/register", methods=["GET","POST"])
 def register():
 
     if request.method == "POST":
 
-        name = request.form["name"]
-        email = request.form["email"]
-        image_data = request.form["image"]
+        name = request.form.get("name")
+        email = request.form.get("email")
+        image_data = request.form.get("image")
+
+        if not image_data:
+            return "Face capture required"
 
         conn = get_db()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM voters WHERE email=?", (email,))
-        user = cursor.fetchone()
-
-        if user:
+        if cursor.fetchone():
             conn.close()
-            return "⚠ This email is already registered!"
+            return "Email already registered"
 
-        image_data = image_data.split(",")[1]
-        image_bytes = base64.b64decode(image_data)
+        try:
+            image_data = image_data.split(",")[1]
+            image_bytes = base64.b64decode(image_data)
+        except:
+            return "Image error"
 
-        filename = email + ".png"
+        filename = secure_filename(email + ".png")
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
-        with open(filepath,"wb") as f:
+        with open(filepath, "wb") as f:
             f.write(image_bytes)
 
         cursor.execute(
@@ -71,26 +78,47 @@ def register():
     return render_template("register.html")
 
 
-# ---------------- LOGIN PAGE ----------------
+# ---------------- FACE LOGIN ----------------
 
 @app.route("/login", methods=["GET","POST"])
 def login():
 
     if request.method == "POST":
 
-        image_data = request.form["image"]
+        image_data = request.form.get("image")
 
-        # convert captured image
-        image_data = image_data.split(",")[1]
-        image_bytes = base64.b64decode(image_data)
+        if not image_data:
+            return "Capture face first"
 
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        captured_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        try:
+
+            image_data = image_data.split(",")[1]
+            image_bytes = base64.b64decode(image_data)
+
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            captured_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        except:
+            return "Image processing error"
+
+        # Convert to grayscale
+        gray = cv2.cvtColor(captured_img, cv2.COLOR_BGR2GRAY)
+
+        # Load face detector
+        face_cascade = cv2.CascadeClassifier(
+            "haarcascade_frontalface_default.xml"
+        )
+
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+
+        # ---------------- NO FACE DETECTED ----------------
+
+        if len(faces) == 0:
+            return "No face detected. Please capture again."
 
         captured_img = cv2.resize(captured_img,(200,200))
 
-        conn = sqlite3.connect("database.db")
-        conn.row_factory = sqlite3.Row
+        conn = get_db()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM voters")
@@ -102,34 +130,33 @@ def login():
 
             stored_img = cv2.imread(user["photo"])
 
+            if stored_img is None:
+                continue
+
             stored_img = cv2.resize(stored_img,(200,200))
 
             diff = cv2.absdiff(stored_img,captured_img)
 
             score = np.mean(diff)
 
-            if score < 50:   # threshold
+            if score < 50:
                 matched_user = user
                 break
 
+        conn.close()
+
+        # ---------------- FACE MATCH ----------------
+
         if matched_user:
 
-            if matched_user["has_voted"] == 1:
-                return "You have already voted"
+            return redirect(f"/vote/{matched_user['id']}")
 
-            cursor.execute("SELECT * FROM candidates")
-            candidates = cursor.fetchall()
+        # ---------------- FACE NOT MATCHED ----------------
 
-            return render_template(
-                "vote.html",
-                user=matched_user,
-                candidates=candidates
-            )
-
-        else:
-            return "Face not matched. Try again."
+        return "Face not matched. Try again."
 
     return render_template("login.html")
+
 
 # ---------------- VOTING PAGE ----------------
 
@@ -159,20 +186,28 @@ def vote(user_id):
 @app.route("/submit_vote", methods=["POST"])
 def submit_vote():
 
+    user_id = request.form.get("user_id")
+    candidate_id = request.form.get("candidate")
+
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("SELECT status FROM election_status WHERE id=1")
-    status = cursor.fetchone()[0]
+    status = cursor.fetchone()["status"]
 
     if status == "stopped":
-        return "Election has been stopped by admin!"
+        conn.close()
+        return "Election stopped by admin"
 
-    user_id = request.form["user_id"]
-    candidate_id = request.form["candidate"]
+    cursor.execute(
+        "UPDATE candidates SET votes=votes+1 WHERE id=?",
+        (candidate_id,)
+    )
 
-    cursor.execute("UPDATE candidates SET votes=votes+1 WHERE id=?", (candidate_id,))
-    cursor.execute("UPDATE voters SET has_voted=1 WHERE id=?", (user_id,))
+    cursor.execute(
+        "UPDATE voters SET has_voted=1 WHERE id=?",
+        (user_id,)
+    )
 
     conn.commit()
     conn.close()
@@ -180,7 +215,7 @@ def submit_vote():
     return redirect("/result")
 
 
-# ---------------- RESULT PAGE ----------------
+# ---------------- RESULTS ----------------
 
 @app.route("/result")
 def result():
@@ -196,7 +231,7 @@ def result():
     labels = [row["name"] for row in data]
     votes = [row["votes"] for row in data]
 
-    winner = max(data, key=lambda x: x["votes"])["name"]
+    winner = max(data, key=lambda x: x["votes"])["name"] if data else "No votes"
 
     return render_template(
         "result.html",
@@ -205,22 +240,23 @@ def result():
         winner=winner
     )
 
-# ----------------ADMIN LOGIN ----------------
+
+# ---------------- ADMIN LOGIN ----------------
 
 @app.route("/admin_login", methods=["GET","POST"])
 def admin_login():
 
     if request.method == "POST":
 
-        username = request.form["username"]
-        password = request.form["password"]
+        username = request.form.get("username")
+        password = request.form.get("password")
 
         conn = get_db()
         cursor = conn.cursor()
 
         cursor.execute(
-        "SELECT * FROM admin WHERE username=? AND password=?",
-        (username,password)
+            "SELECT * FROM admin WHERE username=? AND password=?",
+            (username,password)
         )
 
         admin = cursor.fetchone()
@@ -233,10 +269,15 @@ def admin_login():
         return "Invalid credentials"
 
     return render_template("admin_login.html")
+
+
 # ---------------- ADMIN DASHBOARD ----------------
 
 @app.route("/admin")
 def admin():
+
+    if "admin" not in session:
+        return redirect("/admin_login")
 
     conn = get_db()
     cursor = conn.cursor()
@@ -254,14 +295,20 @@ def admin():
 @app.route("/add_candidate", methods=["POST"])
 def add_candidate():
 
-    name = request.form["name"]
-    party = request.form["party"]
+    if "admin" not in session:
+        return redirect("/admin_login")
+
+    name = request.form.get("name")
+    party = request.form.get("party")
 
     symbol = request.files["symbol"]
     photo = request.files["photo"]
 
-    symbol_path = "static/uploads/" + symbol.filename
-    photo_path = "static/uploads/" + photo.filename
+    symbol_filename = secure_filename(symbol.filename)
+    photo_filename = secure_filename(photo.filename)
+
+    symbol_path = os.path.join("static/uploads", symbol_filename)
+    photo_path = os.path.join("static/uploads", photo_filename)
 
     symbol.save(symbol_path)
     photo.save(photo_path)
@@ -285,13 +332,13 @@ def add_candidate():
 @app.route("/delete_candidate/<int:id>")
 def delete_candidate(id):
 
+    if "admin" not in session:
+        return redirect("/admin_login")
+
     conn = get_db()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "DELETE FROM candidates WHERE id=?",
-        (id,)
-    )
+    cursor.execute("DELETE FROM candidates WHERE id=?", (id,))
 
     conn.commit()
     conn.close()
@@ -314,10 +361,10 @@ def download_result():
 
     filename = "result.csv"
 
-    with open(filename, "w", newline="") as f:
+    with open(filename,"w",newline="") as f:
 
         writer = csv.writer(f)
-        writer.writerow(["Candidate", "Votes"])
+        writer.writerow(["Candidate","Votes"])
 
         for row in data:
             writer.writerow(row)
@@ -325,10 +372,13 @@ def download_result():
     return send_file(filename, as_attachment=True)
 
 
-#-----------START ELECTION ----------------
+# ---------------- START ELECTION ----------------
 
 @app.route("/start_election")
 def start_election():
+
+    if "admin" not in session:
+        return redirect("/admin_login")
 
     conn = get_db()
     cursor = conn.cursor()
@@ -339,20 +389,26 @@ def start_election():
     conn.close()
 
     return redirect("/admin")
+
+
 # ---------------- STOP ELECTION ----------------
+
 @app.route("/stop_election")
 def stop_election():
+
+    if "admin" not in session:
+        return redirect("/admin_login")
 
     conn = get_db()
     cursor = conn.cursor()
 
-    # change election status to stopped
     cursor.execute("UPDATE election_status SET status='stopped' WHERE id=1")
 
     conn.commit()
     conn.close()
 
     return redirect("/admin")
+
 
 # ---------------- RUN SERVER ----------------
 

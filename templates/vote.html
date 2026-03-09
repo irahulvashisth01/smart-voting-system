@@ -186,8 +186,8 @@ width:100%;
 <input type="hidden" name="candidate" value="{{c['id']}}">
 <input type="hidden" name="user_id" value="{{user['id']}}">
 
-{% if user['has_voted']==1 %}
-<button disabled>Already Voted</button>
+{% if user['has_voted'] == 1 %}
+<button disabled style="background:gray">Already Voted</button>
 {% else %}
 <button>Vote</button>
 {% endif %}
