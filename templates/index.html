@@ -33,7 +33,7 @@ font-size:34px;
 font-weight:bold;
 }
 
-/* MOBILE MENU BUTTON */
+/* MOBILE MENU */
 
 .menu-btn{
 display:none;
@@ -44,7 +44,7 @@ color:white;
 cursor:pointer;
 }
 
-/* TOP BUTTONS */
+/* NAV BUTTONS */
 
 .top-buttons{
 display:flex;
@@ -73,7 +73,7 @@ background:#e74c3c;
 color:white;
 }
 
-/* CENTER BOX */
+/* CENTER SECTION */
 
 .center-box{
 height:75vh;
@@ -104,6 +104,11 @@ background:#3498db;
 color:white;
 }
 
+.install{
+background:#ff9800;
+color:white;
+}
+
 button:hover{
 transform:scale(1.05);
 }
@@ -116,7 +121,7 @@ padding:10px;
 font-size:14px;
 }
 
-/* MOBILE RESPONSIVE */
+/* MOBILE */
 
 @media (max-width:768px){
 
@@ -157,7 +162,6 @@ width:90%;
 
 </head>
 
-
 <body>
 
 <header>
@@ -182,7 +186,6 @@ width:90%;
 
 </header>
 
-
 <div class="center-box">
 
 <a href="/register">
@@ -193,7 +196,7 @@ width:90%;
 <button class="login">Login & Vote</button>
 </a>
 
-<button id="installBtn" class="install" style="display:none;background:#ff9800;color:white;">
+<button id="installBtn" class="install">
 📲 Install App
 </button>
 
@@ -203,14 +206,13 @@ width:90%;
 Secure Online Election Platform | Developed by Rahul Sharma | 2026
 </footer>
 
-
 <script>
 
 /* MOBILE MENU */
 
 function toggleMenu(){
 
-var menu = document.getElementById("menu");
+const menu = document.getElementById("menu");
 
 if(menu.style.display === "flex"){
 menu.style.display = "none";
@@ -220,42 +222,45 @@ menu.style.display = "flex";
 
 }
 
-/* SERVICE WORKER FOR PWA */
+/* SERVICE WORKER */
 
 if ('serviceWorker' in navigator) {
 navigator.serviceWorker.register('/static/service-worker.js')
-.then(function(){
+.then(()=>{
 console.log("Service Worker Registered");
 });
 }
 
-</script>
-
-<script>
+/* INSTALL APP */
 
 let deferredPrompt;
+const installBtn = document.getElementById("installBtn");
 
-window.addEventListener('beforeinstallprompt', (e) => {
+window.addEventListener("beforeinstallprompt", (e)=>{
 
 e.preventDefault();
 
 deferredPrompt = e;
 
-document.getElementById("installBtn").style.display = "block";
+console.log("Install prompt ready");
 
 });
 
-document.getElementById("installBtn").addEventListener("click", async () => {
+installBtn.addEventListener("click", async ()=>{
 
-if (deferredPrompt) {
+if(deferredPrompt){
 
 deferredPrompt.prompt();
 
 const { outcome } = await deferredPrompt.userChoice;
 
-console.log(`User response: ${outcome}`);
+console.log("User response:", outcome);
 
 deferredPrompt = null;
+
+}else{
+
+alert("To install the app:\nOpen browser menu (⋮) → Install App");
 
 }
 
@@ -264,5 +269,4 @@ deferredPrompt = null;
 </script>
 
 </body>
-
 </html>
