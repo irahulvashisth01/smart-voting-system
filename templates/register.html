@@ -163,23 +163,28 @@ alert("Camera access denied!");
 
 /* CAPTURE IMAGE */
 
+<script>
 function capture(){
 
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
+const video = document.getElementById("video");
 
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
+// small resolution
+canvas.width = 320;
+canvas.height = 240;
 
-context.drawImage(video,0,0);
+context.drawImage(video,0,0,320,240);
 
-const image = canvas.toDataURL("image/png");
+// compress image strongly
+const image = canvas.toDataURL("image/jpeg",0.35);
 
 document.getElementById("image_data").value = image;
 
 alert("Face Captured Successfully");
 
 }
+</script>
 
 /* PWA SERVICE WORKER */
 
