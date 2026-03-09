@@ -78,20 +78,56 @@ def login():
 
     if request.method == "POST":
 
-        email = request.form["email"]
+        image_data = request.form["image"]
 
-        conn = get_db()
+        # convert captured image
+        image_data = image_data.split(",")[1]
+        image_bytes = base64.b64decode(image_data)
+
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        captured_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        captured_img = cv2.resize(captured_img,(200,200))
+
+        conn = sqlite3.connect("database.db")
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM voters WHERE email=?", (email,))
-        user = cursor.fetchone()
+        cursor.execute("SELECT * FROM voters")
+        voters = cursor.fetchall()
 
-        conn.close()
+        matched_user = None
 
-        if user:
-            return redirect(f"/vote/{user['id']}")
+        for user in voters:
+
+            stored_img = cv2.imread(user["photo"])
+
+            stored_img = cv2.resize(stored_img,(200,200))
+
+            diff = cv2.absdiff(stored_img,captured_img)
+
+            score = np.mean(diff)
+
+            if score < 50:   # threshold
+                matched_user = user
+                break
+
+        if matched_user:
+
+            if matched_user["has_voted"] == 1:
+                return "You have already voted"
+
+            cursor.execute("SELECT * FROM candidates")
+            candidates = cursor.fetchall()
+
+            return render_template(
+                "vote.html",
+                user=matched_user,
+                candidates=candidates
+            )
+
         else:
-            return "User not found"
+            return "Face not matched. Try again."
 
     return render_template("login.html")
 
