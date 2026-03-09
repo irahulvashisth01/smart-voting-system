@@ -107,6 +107,7 @@ color:white;
 .install{
 background:#ff9800;
 color:white;
+display:none;
 }
 
 button:hover{
@@ -224,14 +225,12 @@ menu.style.display = "flex";
 
 /* SERVICE WORKER */
 
-if ('serviceWorker' in navigator) {
-navigator.serviceWorker.register('/static/service-worker.js')
-.then(()=>{
-console.log("Service Worker Registered");
-});
+if ("serviceWorker" in navigator) {
+navigator.serviceWorker.register("/static/service-worker.js")
+.then(()=>console.log("Service Worker Registered"));
 }
 
-/* INSTALL APP */
+/* PWA INSTALL */
 
 let deferredPrompt;
 const installBtn = document.getElementById("installBtn");
@@ -242,27 +241,35 @@ e.preventDefault();
 
 deferredPrompt = e;
 
-console.log("Install prompt ready");
+installBtn.style.display = "block";
 
 });
 
+/* INSTALL BUTTON CLICK */
+
 installBtn.addEventListener("click", async ()=>{
 
-if(deferredPrompt){
+if(!deferredPrompt) return;
 
 deferredPrompt.prompt();
 
-const { outcome } = await deferredPrompt.userChoice;
+const choice = await deferredPrompt.userChoice;
 
-console.log("User response:", outcome);
+console.log("Install result:", choice.outcome);
 
 deferredPrompt = null;
 
-}else{
+installBtn.style.display = "none";
 
-alert("To install the app:\nOpen browser menu (⋮) → Install App");
+});
 
-}
+/* OPTIONAL: detect install */
+
+window.addEventListener("appinstalled", ()=>{
+
+console.log("PWA installed");
+
+installBtn.style.display = "none";
 
 });
 
