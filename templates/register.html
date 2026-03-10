@@ -46,11 +46,12 @@ border-radius:5px;
 border:1px solid #ccc;
 }
 
-video{
+video, canvas{
 width:100%;
 max-width:320px;
 border-radius:6px;
 border:2px solid #444;
+margin-top:10px;
 }
 
 button{
@@ -83,6 +84,11 @@ button:hover{
 opacity:0.9;
 }
 
+.preview{
+margin-top:10px;
+display:none;
+}
+
 @media (max-width:768px){
 
 .container{
@@ -103,9 +109,9 @@ font-size:22px;
 
 <div class="container">
 
-<h2>Voter Registration</h2>
+<h2>🧑 Voter Registration</h2>
 
-<form method="POST" action="/register">
+<form method="POST" action="/register" onsubmit="return validateCapture()">
 
 <input type="text" name="name" placeholder="Enter Full Name" required>
 
@@ -113,13 +119,13 @@ font-size:22px;
 
 <h3>Face Verification</h3>
 
-<video id="video" autoplay></video>
+<video id="video" autoplay playsinline></video>
 
-<br>
-
-<button type="button" class="capture" onclick="capture()">Capture Face</button>
+<button type="button" class="capture" onclick="capture()">📸 Capture Face</button>
 
 <canvas id="canvas" style="display:none;"></canvas>
+
+<img id="preview" class="preview">
 
 <input type="hidden" name="image" id="image_data">
 
@@ -130,7 +136,7 @@ font-size:22px;
 <br>
 
 <a href="/">
-<button class="back">Back to Home</button>
+<button class="back">⬅ Back to Home</button>
 </a>
 
 </div>
@@ -143,15 +149,16 @@ const video = document.getElementById("video");
 
 navigator.mediaDevices.getUserMedia({
 video:{
-width:320,
-height:240
+width:{ideal:320},
+height:{ideal:240},
+facingMode:"user"
 }
 })
 .then(stream=>{
 video.srcObject = stream;
 })
 .catch(()=>{
-alert("Camera access denied!");
+alert("Camera access denied. Please allow camera permission.");
 });
 
 
@@ -167,17 +174,38 @@ canvas.height = 240;
 
 context.drawImage(video,0,0,320,240);
 
-/* compress image */
 const image = canvas.toDataURL("image/jpeg",0.35);
 
 document.getElementById("image_data").value = image;
 
-alert("Face Captured Successfully");
+/* show preview */
+
+const preview = document.getElementById("preview");
+preview.src = image;
+preview.style.display = "block";
+
+alert("Face captured successfully");
 
 }
 
 
-/* SERVICE WORKER */
+/* PREVENT REGISTER WITHOUT FACE */
+
+function validateCapture(){
+
+const img = document.getElementById("image_data").value;
+
+if(!img){
+alert("Please capture your face before registering.");
+return false;
+}
+
+return true;
+
+}
+
+
+/* SERVICE WORKER FOR PWA */
 
 if ('serviceWorker' in navigator){
 navigator.serviceWorker.register('/static/service-worker.js')

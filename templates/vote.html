@@ -13,7 +13,7 @@
 
 body{
 margin:0;
-font-family:Arial;
+font-family:Arial, Helvetica, sans-serif;
 background:linear-gradient(to right,#2c3e50,#4ca1af);
 color:white;
 }
@@ -23,7 +23,7 @@ color:white;
 header{
 text-align:center;
 padding:20px;
-font-size:28px;
+font-size:30px;
 font-weight:bold;
 }
 
@@ -34,6 +34,7 @@ display:flex;
 padding:30px;
 gap:30px;
 flex-wrap:wrap;
+align-items:flex-start;
 }
 
 /* USER PROFILE */
@@ -42,10 +43,10 @@ flex-wrap:wrap;
 width:280px;
 background:white;
 color:black;
-padding:20px;
-border-radius:10px;
+padding:25px;
+border-radius:12px;
 text-align:center;
-box-shadow:0 5px 15px rgba(0,0,0,0.3);
+box-shadow:0 8px 20px rgba(0,0,0,0.3);
 }
 
 .user-card img{
@@ -53,7 +54,17 @@ width:120px;
 height:120px;
 border-radius:50%;
 object-fit:cover;
-margin-bottom:10px;
+margin-bottom:12px;
+border:3px solid #3498db;
+}
+
+.user-card h3{
+margin:5px 0;
+}
+
+.status{
+margin-top:10px;
+font-weight:bold;
 }
 
 /* CANDIDATE GRID */
@@ -71,9 +82,14 @@ gap:20px;
 background:white;
 color:black;
 padding:20px;
-border-radius:10px;
+border-radius:12px;
 text-align:center;
-box-shadow:0 5px 15px rgba(0,0,0,0.3);
+box-shadow:0 8px 20px rgba(0,0,0,0.3);
+transition:0.2s;
+}
+
+.candidate-card:hover{
+transform:translateY(-5px);
 }
 
 .candidate-card img{
@@ -81,18 +97,19 @@ width:100px;
 height:100px;
 border-radius:50%;
 object-fit:cover;
+margin-bottom:10px;
 }
 
 /* PARTY SYMBOL */
 
 .symbol{
 width:40px;
-margin-top:10px;
+margin-top:8px;
 }
 
 /* BUTTON */
 
-button{
+.vote-btn{
 margin-top:15px;
 padding:10px 20px;
 border:none;
@@ -104,11 +121,11 @@ font-size:16px;
 transition:0.2s;
 }
 
-button:hover{
+.vote-btn:hover{
 transform:scale(1.05);
 }
 
-button:disabled{
+.vote-btn:disabled{
 background:gray;
 cursor:not-allowed;
 }
@@ -131,7 +148,7 @@ width:90%;
 grid-template-columns:1fr;
 }
 
-button{
+.vote-btn{
 width:100%;
 }
 
@@ -160,10 +177,13 @@ width:100%;
 <p>{{user['email']}}</p>
 
 {% if user['has_voted']==1 %}
-<p style="color:red;font-weight:bold;">You have already voted</p>
+<p class="status" style="color:red;">⚠ You have already voted</p>
+{% else %}
+<p class="status" style="color:green;">✔ You can vote now</p>
 {% endif %}
 
 </div>
+
 
 <!-- CANDIDATES -->
 
@@ -181,15 +201,23 @@ width:100%;
 
 <img class="symbol" src="/{{c['symbol']}}">
 
-<form action="/submit_vote" method="POST">
+<form action="/submit_vote" method="POST" onsubmit="return confirmVote()">
 
 <input type="hidden" name="candidate" value="{{c['id']}}">
 <input type="hidden" name="user_id" value="{{user['id']}}">
 
 {% if user['has_voted'] == 1 %}
-<button disabled style="background:gray">Already Voted</button>
+
+<button class="vote-btn" disabled>
+Already Voted
+</button>
+
 {% else %}
-<button>Vote</button>
+
+<button class="vote-btn">
+Vote
+</button>
+
 {% endif %}
 
 </form>
@@ -204,7 +232,13 @@ width:100%;
 
 <script>
 
-/* PWA SERVICE WORKER */
+/* CONFIRM VOTE */
+
+function confirmVote(){
+return confirm("Are you sure you want to cast your vote?");
+}
+
+/* SERVICE WORKER */
 
 if ('serviceWorker' in navigator) {
 navigator.serviceWorker.register('/static/service-worker.js')

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_file, session
+from flask import Flask, render_template, request, redirect, send_file, session, url_for
 import sqlite3
 import os
 import base64
@@ -8,16 +8,15 @@ import numpy as np
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.secret_key = "change_this_secret_key"
+app.secret_key = "super_secure_key_change_this"
 
 UPLOAD_FOLDER = "static/uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
-# Ensure upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Load face detector
+# Load Haar Cascade for face detection
 face_cascade = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
 
 
@@ -29,7 +28,7 @@ def get_db():
     return conn
 
 
-# ---------------- HOME ----------------
+# ---------------- HOME PAGE ----------------
 
 @app.route("/")
 def home():
@@ -47,8 +46,8 @@ def register():
         email = request.form.get("email")
         image_data = request.form.get("image")
 
-        if not image_data:
-            return "Face capture required"
+        if not name or not email or not image_data:
+            return "All fields are required"
 
         conn = get_db()
         cursor = conn.cursor()
@@ -56,13 +55,13 @@ def register():
         cursor.execute("SELECT * FROM voters WHERE email=?", (email,))
         if cursor.fetchone():
             conn.close()
-            return "Email already registered"
+            return "⚠ Email already registered"
 
         try:
             image_data = image_data.split(",")[1]
             image_bytes = base64.b64decode(image_data)
         except:
-            return "Image error"
+            return "Invalid image format"
 
         filename = secure_filename(email + ".png")
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
@@ -101,22 +100,19 @@ def login():
 
             nparr = np.frombuffer(image_bytes, np.uint8)
             captured_img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
         except:
-            return "Image processing error"
+            return "Image processing failed"
 
         gray = cv2.cvtColor(captured_img, cv2.COLOR_BGR2GRAY)
 
-        faces = face_cascade.detectMultiScale(
-            gray,
-            scaleFactor=1.3,
-            minNeighbors=5,
-            minSize=(50, 50)
-        )
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
         if len(faces) == 0:
             return "No face detected. Try again."
 
         captured_img = cv2.resize(captured_img, (200, 200))
+        captured_gray = cv2.cvtColor(captured_img, cv2.COLOR_BGR2GRAY)
 
         conn = get_db()
         cursor = conn.cursor()
@@ -137,23 +133,25 @@ def login():
                 continue
 
             stored_img = cv2.resize(stored_img, (200, 200))
-
             stored_gray = cv2.cvtColor(stored_img, cv2.COLOR_BGR2GRAY)
-            captured_gray = cv2.cvtColor(captured_img, cv2.COLOR_BGR2GRAY)
 
             diff = cv2.absdiff(stored_gray, captured_gray)
-
             score = np.mean(diff)
 
-            # Higher threshold for cloud environments
-            if score < 120:
+            if score < 110:   # Face similarity threshold
                 matched_user = user
                 break
 
         conn.close()
 
         if matched_user:
-            return redirect(f"/vote/{matched_user['id']}")
+
+            session["user_id"] = matched_user["id"]
+
+            if matched_user["has_voted"] == 1:
+                return redirect(url_for("vote", user_id=matched_user["id"]))
+
+            return redirect(url_for("vote", user_id=matched_user["id"]))
 
         return "Face not matched. Try again."
 
@@ -176,6 +174,9 @@ def vote(user_id):
 
     conn.close()
 
+    if not user:
+        return redirect("/")
+
     return render_template(
         "vote.html",
         user=user,
@@ -194,12 +195,19 @@ def submit_vote():
     conn = get_db()
     cursor = conn.cursor()
 
+    cursor.execute("SELECT has_voted FROM voters WHERE id=?", (user_id,))
+    voter = cursor.fetchone()
+
+    if voter["has_voted"] == 1:
+        conn.close()
+        return "You have already voted."
+
     cursor.execute("SELECT status FROM election_status WHERE id=1")
     status = cursor.fetchone()["status"]
 
     if status == "stopped":
         conn.close()
-        return "Election stopped by admin"
+        return "Election is currently stopped."
 
     cursor.execute(
         "UPDATE candidates SET votes=votes+1 WHERE id=?",
@@ -268,7 +276,7 @@ def admin_login():
             session["admin"] = username
             return redirect("/admin")
 
-        return "Invalid credentials"
+        return "Invalid admin credentials"
 
     return render_template("admin_login.html")
 
@@ -287,9 +295,21 @@ def admin():
     cursor.execute("SELECT * FROM candidates")
     candidates = cursor.fetchall()
 
+    cursor.execute("SELECT COUNT(*) FROM voters")
+    voters = cursor.fetchone()[0]
+
+    cursor.execute("SELECT SUM(votes) FROM candidates")
+    total_votes = cursor.fetchone()[0] or 0
+
     conn.close()
 
-    return render_template("admin_dashboard.html", candidates=candidates)
+    return render_template(
+        "admin_dashboard.html",
+        candidates=candidates,
+        voters=voters,
+        total_votes=total_votes,
+        candidates_count=len(candidates)
+    )
 
 
 # ---------------- ADD CANDIDATE ----------------
@@ -306,11 +326,11 @@ def add_candidate():
     symbol = request.files["symbol"]
     photo = request.files["photo"]
 
-    symbol_filename = secure_filename(symbol.filename)
-    photo_filename = secure_filename(photo.filename)
+    symbol_name = secure_filename(symbol.filename)
+    photo_name = secure_filename(photo.filename)
 
-    symbol_path = os.path.join("static/uploads", symbol_filename)
-    photo_path = os.path.join("static/uploads", photo_filename)
+    symbol_path = os.path.join("static/uploads", symbol_name)
+    photo_path = os.path.join("static/uploads", photo_name)
 
     symbol.save(symbol_path)
     photo.save(photo_path)
@@ -348,7 +368,7 @@ def delete_candidate(id):
     return redirect("/admin")
 
 
-# ---------------- DOWNLOAD RESULT ----------------
+# ---------------- DOWNLOAD RESULTS ----------------
 
 @app.route("/download_result")
 def download_result():
@@ -364,6 +384,7 @@ def download_result():
     filename = "result.csv"
 
     with open(filename, "w", newline="") as f:
+
         writer = csv.writer(f)
         writer.writerow(["Candidate", "Votes"])
 

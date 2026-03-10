@@ -37,7 +37,15 @@ h2{
 margin-bottom:20px;
 }
 
-video{
+input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+video, canvas{
 width:100%;
 max-width:320px;
 border-radius:6px;
@@ -52,7 +60,6 @@ border-radius:6px;
 font-size:16px;
 cursor:pointer;
 margin-top:10px;
-transition:0.2s;
 }
 
 .capture{
@@ -70,20 +77,13 @@ background:#555;
 color:white;
 }
 
+.preview{
+margin-top:10px;
+display:none;
+}
+
 button:hover{
 opacity:0.9;
-}
-
-@media (max-width:768px){
-
-.container{
-padding:20px;
-}
-
-h2{
-font-size:22px;
-}
-
 }
 
 </style>
@@ -94,19 +94,21 @@ font-size:22px;
 
 <div class="container">
 
-<h2>Voter Login</h2>
+<h2>🔐 Voter Login</h2>
 
-<form method="POST" action="/login">
+<form method="POST" action="/login" onsubmit="return validateLogin()">
+
+<input type="email" name="email" placeholder="Enter Registered Email" required>
 
 <h3>Face Verification</h3>
 
-<video id="video" autoplay></video>
+<video id="video" autoplay playsinline></video>
 
-<br>
-
-<button type="button" class="capture" onclick="capture()">Capture Face</button>
+<button type="button" class="capture" onclick="capture()">📸 Capture Face</button>
 
 <canvas id="canvas" style="display:none;"></canvas>
+
+<img id="preview" class="preview">
 
 <input type="hidden" name="image" id="image_data">
 
@@ -117,7 +119,7 @@ font-size:22px;
 <br>
 
 <a href="/">
-<button class="back">Back to Home</button>
+<button class="back">⬅ Back to Home</button>
 </a>
 
 </div>
@@ -133,7 +135,11 @@ async function startCamera(){
 try{
 
 const stream = await navigator.mediaDevices.getUserMedia({
-video:true
+video:{
+width:{ideal:320},
+height:{ideal:240},
+facingMode:"user"
+}
 });
 
 video.srcObject = stream;
@@ -141,7 +147,6 @@ video.srcObject = stream;
 }catch(error){
 
 alert("Camera access denied or not supported");
-
 console.log(error);
 
 }
@@ -149,6 +154,7 @@ console.log(error);
 }
 
 startCamera();
+
 
 /* CAPTURE FACE */
 
@@ -162,17 +168,41 @@ canvas.height = 240;
 
 context.drawImage(video,0,0,320,240);
 
-/* compress image */
-
-const image = canvas.toDataURL("image/jpeg",0.4);
+const image = canvas.toDataURL("image/jpeg",0.35);
 
 document.getElementById("image_data").value = image;
+
+/* preview */
+
+const preview = document.getElementById("preview");
+preview.src = image;
+preview.style.display = "block";
 
 alert("Face Captured Successfully");
 
 }
 
-/* SERVICE WORKER (PWA) */
+
+/* PREVENT LOGIN WITHOUT FACE */
+
+function validateLogin(){
+
+const img = document.getElementById("image_data").value;
+
+if(!img){
+
+alert("Please capture your face first");
+
+return false;
+
+}
+
+return true;
+
+}
+
+
+/* SERVICE WORKER */
 
 if ('serviceWorker' in navigator) {
 
@@ -184,5 +214,4 @@ navigator.serviceWorker.register('/static/service-worker.js')
 </script>
 
 </body>
-
 </html>

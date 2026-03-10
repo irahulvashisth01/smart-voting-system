@@ -22,7 +22,7 @@ text-align:center;
 /* HEADER */
 
 header{
-font-size:34px;
+font-size:36px;
 padding:25px;
 font-weight:bold;
 }
@@ -40,25 +40,57 @@ margin-top:30px;
 .card{
 background:white;
 color:black;
-width:240px;
+width:250px;
 padding:20px;
-border-radius:10px;
-box-shadow:0 8px 20px rgba(0,0,0,0.4);
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.35);
+transition:0.3s;
+}
+
+.card:hover{
+transform:translateY(-5px);
+}
+
+.card img{
+width:80px;
+height:80px;
+border-radius:50%;
+object-fit:cover;
+margin-bottom:10px;
 }
 
 .votes{
 font-size:28px;
 margin-top:10px;
 font-weight:bold;
+color:#2c3e50;
 }
 
 /* WINNER */
 
-.winner{
+.winner-box{
 margin-top:40px;
 font-size:26px;
 font-weight:bold;
-color:yellow;
+color:#ffd700;
+}
+
+/* TOTAL VOTES */
+
+.total{
+margin-top:10px;
+font-size:18px;
+}
+
+/* CHART */
+
+.chart-box{
+width:90%;
+max-width:700px;
+margin:40px auto;
+background:white;
+padding:20px;
+border-radius:12px;
 }
 
 /* BUTTONS */
@@ -96,17 +128,6 @@ button:hover{
 transform:scale(1.05);
 }
 
-/* CHART */
-
-.chart-box{
-width:90%;
-max-width:600px;
-margin:40px auto;
-background:white;
-padding:20px;
-border-radius:10px;
-}
-
 /* MOBILE */
 
 @media (max-width:768px){
@@ -140,32 +161,47 @@ width:90%;
 📊 Election Results
 </header>
 
+
+<!-- RESULT CARDS -->
+
 <div class="container">
 
-<div class="card">
-<h3>Candidate A</h3>
-<div class="votes">{{votes_a}}</div>
-</div>
+{% for i in range(labels|length) %}
 
 <div class="card">
-<h3>Candidate B</h3>
-<div class="votes">{{votes_b}}</div>
-</div>
 
-<div class="card">
-<h3>Candidate C</h3>
-<div class="votes">{{votes_c}}</div>
+<h3>{{ labels[i] }}</h3>
+
+<div class="votes">
+{{ votes[i] }} Votes
 </div>
 
 </div>
 
-<div class="winner">
-🏆 Winner: {{winner}}
+{% endfor %}
+
 </div>
+
+
+<!-- WINNER -->
+
+<div class="winner-box">
+🏆 Winner: {{ winner }}
+</div>
+
+<div class="total">
+Total Votes Cast: {{ votes | sum }}
+</div>
+
+
+<!-- CHART -->
 
 <div class="chart-box">
 <canvas id="resultChart"></canvas>
 </div>
+
+
+<!-- BUTTONS -->
 
 <div class="buttons">
 
@@ -183,21 +219,25 @@ width:90%;
 
 </div>
 
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+
+/* RESULT CHART */
 
 const data = {
 labels: {{ labels|safe }},
 datasets: [{
 label: 'Votes',
 data: {{ votes|safe }},
-backgroundColor: [
+backgroundColor:[
 "#3498db",
 "#2ecc71",
 "#e74c3c",
 "#9b59b6",
-"#f1c40f"
+"#f1c40f",
+"#16a085"
 ]
 }]
 };
@@ -209,6 +249,11 @@ options:{
 responsive:true,
 plugins:{
 legend:{display:false}
+},
+scales:{
+y:{
+beginAtZero:true
+}
 }
 }
 });
